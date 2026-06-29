@@ -1,0 +1,44 @@
+team_name: "your-team-name-here"
+
+primary_contact:
+  name: "Full Name"
+  email: "primary@example.com"
+  phone: "+91-XXXXXXXXXX"
+
+team_members:
+  - name: "Member 1 Full Name"
+    email: "member1@example.com"
+    role: "ML Engineer"
+
+github_repo: "https://github.com/YOUR_USERNAME/YOUR_REPO"
+sandbox_link: "https://streamlit.app/YOUR-APP"
+reproduce_command: "python rank.py --candidates ./candidates.jsonl --job-description ./job_description.docx --artifacts ./artifacts --participant-id TEAM_ID --out ./TEAM_ID.csv"
+
+compute:
+  platform: "Local machine"
+  cpu_cores: 8
+  ram_gb: 16
+  python_version: "3.11"
+  os: "macOS or Linux"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: true
+  pre_computation_time_minutes: 0
+
+ai_tools_used:
+  - "Claude"
+
+ai_usage_summary: |
+  Used Claude for implementation planning, code generation assistance, and test iteration.
+
+methodology_summary: |
+  Evidence-consensus JD ranker with dynamic JD parsing, must-have/nice-to-have requirement coverage,
+  structural title/career/skill agreement, capped semantic support, availability multipliers, and
+  suspiciousness penalties for summary-only matches, title-description mismatch, and keyword stuffing.
+
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "redrob-ranker"
+version = "0.1.0"
+description = "Hybrid candidate ranker for the Redrob hackathon challenge"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26,<3",
+  "orjson>=3.10,<4",
+  "pandas>=2.2,<3",
+  "pyarrow>=16,<18",
+  "scikit-learn>=1.5,<2",
+  "sentence-transformers>=3,<4",
+  "streamlit>=1.36,<2",
+]
+
+[project.scripts]
+redrob-precompute = "redrob_ranker.precompute:main"
+redrob-rank = "redrob_ranker.rank:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+testpaths = ["tests"]

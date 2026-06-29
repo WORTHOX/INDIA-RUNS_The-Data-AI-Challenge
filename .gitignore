@@ -1,0 +1,66 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local virtual environments
+.venv/
+.venv*/
+venv/
+env/
+
+# Build and packaging output
+build/
+dist/
+*.egg-info/
+
+# Generated ranking artifacts and model/data cache output
+artifacts/*
+!artifacts/.gitkeep
+.cache/
+models/
+*.parquet
+*.pkl
+*.joblib
+
+# Large local challenge input
+candidate
+candidate.json
+candidates.jsonl
+candidates.jsonl.gz
+
+# Generated submissions and local evaluation files
+TEAM_ID.csv
+submission.csv
+*_submission.csv
+sample_submission.csv
+sample_submission1.csv
+team_*.csv
+dev_set.csv
+labels.csv
+
+# PPT/template assets and screenshots not needed in the code repo
+SS.jpeg
+ss1.png
+ss2.png
+to_work/
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Streamlit local state
+.streamlit/secrets.toml
+
+# Local parking area for old bundle/reference files moved out of the repo root
+trash/
+
+# Local explanatory docs kept off the public submission repo
+docs/
