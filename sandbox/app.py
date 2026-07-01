@@ -48,6 +48,7 @@ if uploaded and st.button("Run ranker", type="primary"):
         candidates_path = temp_path / "sandbox_candidates.jsonl"
         artifacts_dir = temp_path / "artifacts"
         output_path = temp_path / "sandbox_submission.csv"
+        xlsx_output_path = output_path.with_suffix(".xlsx")
 
         _write_uploaded_candidates(uploaded, candidates_path)
         run_precompute(candidates_path, artifacts_dir, enable_dense=enable_dense)
@@ -60,6 +61,12 @@ if uploaded and st.button("Run ranker", type="primary"):
             data=output_path.read_bytes(),
             file_name="sandbox_submission.csv",
             mime="text/csv",
+        )
+        st.download_button(
+            "Download XLSX",
+            data=xlsx_output_path.read_bytes(),
+            file_name="sandbox_submission.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 elif not uploaded:
     st.info("Upload up to 100 candidates as `.json` or `.jsonl` to exercise the ranker end to end.")

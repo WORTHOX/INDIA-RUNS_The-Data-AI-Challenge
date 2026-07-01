@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from redrob_ranker.rank import build_ranked_submission, write_submission_csv
+from redrob_ranker.rank import build_ranked_submission, write_submission_outputs
 from validate_submission import validate_submission
 
 
@@ -47,6 +47,13 @@ def test_generated_submission_passes_validator(tmp_path):
 
     ranked = build_ranked_submission(pd.DataFrame(rows), top_n=100)
     output_path = tmp_path / "team_redrob.csv"
-    write_submission_csv(ranked, output_path)
+    _, xlsx_path = write_submission_outputs(ranked, output_path)
 
     assert validate_submission(output_path) == []
+    assert xlsx_path.exists()
+
+    workbook_frame = pd.read_excel(xlsx_path)
+
+    assert workbook_frame.columns.tolist() == ["candidate_id", "rank", "score", "reasoning"]
+    assert workbook_frame.shape[0] == 100
+    assert workbook_frame.iloc[0]["candidate_id"] == ranked.iloc[0]["candidate_id"]

@@ -1,115 +1,81 @@
 # Redrob Ranker
 
-Evidence-consensus candidate ranking system for the Redrob hackathon bundle in this workspace. The code accepts a job description as an input, builds a dynamic JD contract from it, and ranks candidates from `candidates.jsonl` against that JD.
+Hybrid candidate ranker for the India Runs Data and AI Challenge.
 
-## What the repo does
+The system ranks LinkedIn-style candidate profiles against a supplied job description and emits top-100 CSV and XLSX outputs with deterministic scores and evidence-backed reasoning.
 
-- Streams `candidates.jsonl`
-- Reads `.txt`, `.md`, or `.docx` job descriptions
-- Normalizes profile, career, skill, and behavioral fields
-- Precomputes reusable feature artifacts tied to both the candidate file and JD hash
-- Scores candidates with structural fit, JD requirement coverage, evidence consensus, semantic support, availability, and suspiciousness penalties
-- Emits a submission CSV with deterministic evidence-backed reasoning
-- Provides a small Streamlit sandbox for sample runs
+## What It Does
 
-## Methodology
+- Parses `.docx`, `.txt`, or `.md` job descriptions into a dynamic JD contract.
+- Processes large JSONL candidate files into reusable feature artifacts.
+- Scores title fit, career evidence, skill evidence, seniority fit, availability, semantic support, and suspiciousness risk.
+- Rewards candidates whose title, career history, skills, and JD requirement coverage agree.
+- Handles seniority more realistically: strong ownership can offset lighter tenure, while downgrade or manager-to-hands-on mismatch can reduce fit.
+- Produces `HACKATHON_TEAM.csv` in the required submission format and `HACKATHON_TEAM.xlsx` for spreadsheet review.
 
-- [Beginner guide](docs/BEGINNER_GUIDE.md) explains the project from zero technical background: what was built, which technology is used, which file does what, and why the ranking/reasoning works.
-- [Technical deep dive](docs/TECHNICAL_DEEP_DIVE.md) explains architecture, system design, frontend-to-backend flow, file call graph, and what happens when a new JD is supplied.
-- [Methodology](docs/METHODOLOGY.md) explains the ranking approach, formulas, and reproducibility commands.
-- [Candidate data analysis](docs/CANDIDATE_DATA_ANALYSIS.md) documents the dataset noise patterns that shaped the design.
-- [Execution flow and hardships](docs/PROJECT_EXECUTION_FLOW.md) explains what runs when, what each file returns, and how the final CSV is deduced.
+## Key Files
 
-## Environment
+```text
+rank.py                         Root CLI wrapper for final ranking
+src/redrob_ranker/precompute.py  Builds feature artifacts from candidates + JD
+src/redrob_ranker/rank.py        Scores candidates and writes top-100 CSV/XLSX
+src/redrob_ranker/job_description.py  Extracts JD requirements and target role profile
+METHODOLOGY.md                  Concise explanation of the ranking method
+HACKATHON_TEAM.csv              Current generated CSV submission
+HACKATHON_TEAM.xlsx             Current generated spreadsheet output
+validate_submission.py          Submission format validator
+```
+
+## Setup
 
 ```bash
 python3.11 -m venv .venv311
-. .venv311/bin/activate
+source .venv311/bin/activate
 pip install -r requirements.txt
 pip install -e .
 ```
 
-## Precompute
+## Reproduce Submission
 
-Dense embeddings are optional at precompute time. The ranking step itself does not require network access.
-
-```bash
-python -m redrob_ranker.precompute \
-  --candidates ./candidates.jsonl \
-  --job-description ./job_description.docx \
-  --artifacts ./artifacts
-```
-
-Skip dense embeddings:
+Precompute features:
 
 ```bash
 python -m redrob_ranker.precompute \
-  --candidates ./candidates.jsonl \
-  --job-description ./job_description.docx \
-  --artifacts ./artifacts \
+  --candidates candidates.jsonl \
+  --job-description job_description.docx \
+  --artifacts artifacts \
   --skip-dense
 ```
 
-## Ranking
-
-This is the single reproduce command for submission generation once artifacts exist:
+Generate ranked CSV and XLSX:
 
 ```bash
 python rank.py \
-  --candidates ./candidates.jsonl \
-  --job-description ./job_description.docx \
-  --artifacts ./artifacts \
-  --participant-id TEAM_ID \
-  --out ./TEAM_ID.csv
+  --candidates candidates.jsonl \
+  --job-description job_description.docx \
+  --artifacts artifacts \
+  --participant-id HACKATHON_TEAM \
+  --out HACKATHON_TEAM.csv
 ```
 
-Expected output columns:
+Validate:
+
+```bash
+python validate_submission.py HACKATHON_TEAM.csv
+```
+
+## Output Format
 
 ```text
 candidate_id,rank,score,reasoning
 ```
 
-## Validation
+The CSV is the official validator-compatible file. The XLSX contains the same columns and rows in a readable spreadsheet. The final ranking path is deterministic for the same candidate file, JD, and generated artifacts. No hosted API is required for ranking.
 
-```bash
-python validate_submission.py TEAM_ID.csv
-```
-
-## Sandbox
+## Optional Sandbox
 
 ```bash
 streamlit run sandbox/app.py
 ```
 
-The sandbox accepts a small `.json`, `.jsonl`, or extensionless JSONL candidate sample plus an optional `.txt`, `.md`, or `.docx` JD, runs precompute plus ranking on that sample, and provides a downloadable CSV.
-
-## Dev-set tooling
-
-Build a manual-labeling template:
-
-```bash
-python scripts/build_dev_set.py \
-  --features ./artifacts/candidate_features.parquet \
-  --out ./dev_set.csv
-```
-
-Evaluate baselines against labeled relevance:
-
-```bash
-python scripts/evaluate_baselines.py \
-  --features ./artifacts/candidate_features.parquet \
-  --labels ./labels.csv
-```
-
-`labels.csv` must contain:
-
-```text
-candidate_id,relevance
-```
-
-## Ranking-time guarantees
-
-- Ranking uses only local artifacts, the candidate file, and the supplied JD file
-- No hosted API calls are needed during the final ranking step
-- The code path for submission generation is deterministic given the same artifacts, candidate file, and JD file
-- Ranking verifies both `artifacts/dataset.hash` and `artifacts/job.hash` before producing a CSV
+The sandbox is a lightweight local UI for testing small candidate samples with the project default JD.
