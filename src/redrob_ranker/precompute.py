@@ -17,6 +17,7 @@ from redrob_ranker.features.career_history import extract_career_features
 from redrob_ranker.features.evidence_consensus import extract_evidence_consensus_features
 from redrob_ranker.features.honeypot import extract_honeypot_features
 from redrob_ranker.features.normalize import build_normalized_candidate
+from redrob_ranker.features.seniority_alignment import extract_seniority_alignment_features
 from redrob_ranker.features.skills import extract_skill_features
 from redrob_ranker.features.title_alignment import extract_title_features
 from redrob_ranker.job_description import build_job_contract, compute_job_text_hash, read_job_description_text
@@ -61,6 +62,13 @@ def build_feature_frame(
             career_features=career_features,
             skill_features=skill_features,
         )
+        seniority_features = extract_seniority_alignment_features(
+            normalized,
+            contract,
+            career_features=career_features,
+            skill_features=skill_features,
+            consensus_features=consensus_features,
+        )
         behavioral_features = extract_behavioral_features(normalized, reference_date, contract)
         honeypot_features = extract_honeypot_features(normalized, contract)
 
@@ -91,6 +99,7 @@ def build_feature_frame(
             **career_features,
             **skill_features,
             **consensus_features,
+            **seniority_features,
             **behavioral_features,
             **honeypot_features,
         }

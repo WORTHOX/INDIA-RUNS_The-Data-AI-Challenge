@@ -30,6 +30,7 @@ Because of this, semantic similarity alone is unsafe. The ranker uses semantic s
    - Title alignment: current/recent titles against the JD target role.
    - Career evidence: production, retrieval/ranking, evaluation, product/service background, and JD-specific keywords.
    - Skill evidence: direct skill support, proficiency sanity, duration sanity, Python/vector/evaluation/JD coverage.
+   - Seniority evidence: target JD level vs candidate title level, early high-ownership maturity, downgrade risk, and manager-to-hands-on mismatch.
    - Behavioral evidence: recency, open-to-work, response rate, notice period, relocation/location/country fit.
    - Evidence consensus: how many independent channels support the match: title, career, skills, and JD requirement coverage.
    - Noise checks: summary-only keyword matches and title-description mismatch risk.
@@ -52,14 +53,16 @@ final_score = clamp_0_1(
 
 ```text
 fit_score =
-  0.22 * title_score +
-  0.22 * career_score +
-  0.18 * role_specific_signal +
+  0.20 * title_score +
+  0.20 * career_score +
+  0.17 * role_specific_signal +
   0.12 * evidence_consensus_score +
-  0.08 * evaluation_signal +
-  0.06 * python_score +
-  0.06 * product_background_score +
-  0.06 * experience_score
+  0.08 * seniority_alignment_score +
+  0.07 * work_maturity_score +
+  0.06 * evaluation_signal +
+  0.04 * python_score +
+  0.03 * product_background_score +
+  0.03 * experience_score
 ```
 
 ```text
@@ -72,6 +75,8 @@ role_specific_signal =
 ```
 
 This avoids the old single-channel saturation problem: a candidate with one perfect keyword hit should not beat another candidate with broad JD evidence across career, skills, and requirements.
+
+Seniority is not treated as years alone. The ranker estimates the JD's target career level and compares it with the candidate's current and peak titles. It then uses role descriptions to detect mature work such as ownership, architecture, production launch, scaling, end-to-end delivery, and mentoring. This allows a lower-tenure candidate with real senior-level project ownership to stay competitive, while adding risk for profiles that look overqualified for a lower-level role or too management-heavy for a hands-on IC role.
 
 Semantic support is limited to `0.15` and is disabled for profiles that only match the JD in their summary without supporting title/career/skill evidence.
 

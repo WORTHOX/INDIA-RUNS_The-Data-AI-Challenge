@@ -59,6 +59,18 @@ def compute_suspiciousness_penalty(
     if title_description_mismatch_score:
         penalty += 0.20 * title_description_mismatch_score
 
+    overqualified_downgrade_risk = float(_value(candidate, "overqualified_downgrade_risk", 0.0) or 0.0)
+    if overqualified_downgrade_risk:
+        penalty += 0.12 * overqualified_downgrade_risk
+
+    underqualified_seniority_risk = float(_value(candidate, "underqualified_seniority_risk", 0.0) or 0.0)
+    if underqualified_seniority_risk:
+        penalty += 0.12 * underqualified_seniority_risk
+
+    management_mismatch_score = float(_value(candidate, "management_mismatch_score", 0.0) or 0.0)
+    if management_mismatch_score:
+        penalty += 0.14 * management_mismatch_score
+
     service_background_score = float(_value(candidate, "service_background_score", 0.0) or 0.0)
     total_roles = int(_value(candidate, "total_roles", 0) or 0)
     if total_roles and service_background_score >= 0.95:

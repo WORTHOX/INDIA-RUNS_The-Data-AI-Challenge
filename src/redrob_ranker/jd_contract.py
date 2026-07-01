@@ -20,6 +20,9 @@ class JobContract:
     exclusion_keywords: tuple[str, ...]
     min_years: float
     max_years: float
+    target_seniority_level: float
+    target_seniority_label: str
+    target_role_mode: str
     positive_title_terms: tuple[str, ...]
     positive_title_hints: tuple[str, ...]
     negative_title_terms: tuple[str, ...]
@@ -89,6 +92,9 @@ DEFAULT_JD_CONTRACT = JobContract(
     exclusion_keywords=(),
     min_years=5.0,
     max_years=9.0,
+    target_seniority_level=3.2,
+    target_seniority_label="senior",
+    target_role_mode="ic",
     positive_title_terms=(
         "ai engineer",
         "senior ai engineer",

@@ -9,22 +9,32 @@ from __future__ import annotations
 from typing import Mapping
 
 
-def compute_experience_band_score(years_of_experience: float) -> float:
-    """Score experience against the expected senior-but-hands-on band."""
+def compute_experience_band_score(
+    years_of_experience: float,
+    *,
+    min_years: float = 5.0,
+    max_years: float = 9.0,
+    work_maturity_score: float = 0.0,
+    evidence_channel_count: int = 0,
+) -> float:
+    """Score experience against the JD band without ignoring early maturity."""
 
-    if 5.0 <= years_of_experience <= 9.0:
+    if min_years <= years_of_experience <= max_years:
         return 1.0
-    if 4.0 <= years_of_experience <= 10.0:
-        return 0.8
-    if 3.0 <= years_of_experience <= 12.0:
-        return 0.6
-    if years_of_experience > 0:
-        return 0.3
-    return 0.0
+    if years_of_experience < min_years:
+        shortfall = min_years - years_of_experience
+        base = max(0.0, 1.0 - shortfall / max(min_years, 1.0))
+        if work_maturity_score >= 0.70 and evidence_channel_count >= 3:
+            base = max(base, 0.80)
+        elif work_maturity_score >= 0.55 and evidence_channel_count >= 2:
+            base = max(base, 0.65)
+        return round(base, 6)
+    overage = years_of_experience - max_years
+    return round(max(0.35, 1.0 - overage / max(max_years, 1.0)), 6)
 
 
-def _value(row: Mapping[str, float], key: str) -> float:
-    return float(row.get(key, 0.0) or 0.0)
+def _value(row: Mapping[str, float], key: str, default: float = 0.0) -> float:
+    return float(row.get(key, default) or default)
 
 
 def compute_role_specific_signal(row: Mapping[str, float]) -> float:
@@ -65,15 +75,28 @@ def compute_fit_score(row: Mapping[str, float]) -> float:
         _value(row, "evaluation_skill_score"),
     )
     consensus_signal = _value(row, "evidence_consensus_score")
-    experience_score = compute_experience_band_score(_value(row, "years_of_experience"))
+    work_maturity_signal = _value(row, "work_maturity_score")
+    seniority_signal = _value(row, "seniority_alignment_score")
+    experience_score = max(
+        _value(row, "experience_alignment_score"),
+        compute_experience_band_score(
+            _value(row, "years_of_experience"),
+            min_years=_value(row, "jd_min_years", 5.0),
+            max_years=_value(row, "jd_max_years", 9.0),
+            work_maturity_score=work_maturity_signal,
+            evidence_channel_count=int(_value(row, "evidence_channel_count")),
+        ),
+    )
     fit_score = (
-        0.22 * _value(row, "title_score")
-        + 0.22 * _value(row, "career_score")
-        + 0.18 * role_specific_signal
+        0.20 * _value(row, "title_score")
+        + 0.20 * _value(row, "career_score")
+        + 0.17 * role_specific_signal
         + 0.12 * consensus_signal
-        + 0.08 * evaluation_signal
-        + 0.06 * _value(row, "python_score")
-        + 0.06 * _value(row, "product_background_score")
-        + 0.06 * experience_score
+        + 0.08 * seniority_signal
+        + 0.07 * work_maturity_signal
+        + 0.06 * evaluation_signal
+        + 0.04 * _value(row, "python_score")
+        + 0.03 * _value(row, "product_background_score")
+        + 0.03 * experience_score
     )
     return round(min(fit_score, 1.0), 6)

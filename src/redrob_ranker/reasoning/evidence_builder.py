@@ -135,11 +135,23 @@ def build_reasoning(row: Mapping[str, object], rank: int) -> str:
             f"{primary_evidence or 'adjacent technical evidence'}; this profile looks more borderline for the JD."
         )
 
+    support_parts: list[str] = []
+    if float(row.get("early_maturity_signal", 0.0) or 0.0) >= 0.75:
+        support_parts.append("early high-ownership evidence offsets lighter tenure")
+    if support_parts:
+        opener = opener.rstrip(".") + "; " + ", ".join(support_parts[:1]) + "."
+
     concern_parts: list[str] = []
     if float(row.get("summary_only_match_score", 0.0) or 0.0) >= 0.50:
         concern_parts.append("summary-only JD keywords")
     if float(row.get("title_description_mismatch_score", 0.0) or 0.0) >= 0.50:
         concern_parts.append("title-description mismatch")
+    if float(row.get("overqualified_downgrade_risk", 0.0) or 0.0) >= 0.45:
+        concern_parts.append("possible title-level downgrade risk")
+    if float(row.get("underqualified_seniority_risk", 0.0) or 0.0) >= 0.45:
+        concern_parts.append("seniority evidence is lighter than the JD")
+    if float(row.get("management_mismatch_score", 0.0) or 0.0) >= 0.45:
+        concern_parts.append("manager-to-hands-on mismatch risk")
     # Concerns are included only when measured features found them. No free-form
     # claims are added here.
     if concern_parts:

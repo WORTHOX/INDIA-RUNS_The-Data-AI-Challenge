@@ -511,6 +511,68 @@ def _extract_experience_band(text: str) -> tuple[float, float]:
     return 0.0, 99.0
 
 
+def _infer_target_seniority(
+    text: str,
+    positive_title_terms: tuple[str, ...],
+    min_years: float,
+    max_years: float,
+) -> tuple[float, str, str]:
+    """Infer the JD's target career level without treating tenure as destiny."""
+
+    title_text = " ".join(positive_title_terms).lower()
+    normalized = f" {normalize_job_text(text).lower()} "
+    search_text = f" {title_text} {normalized} "
+
+    if any(term in search_text for term in (" chief ", " cto ", " vp ", " vice president ")):
+        level, label = 6.0, "executive"
+    elif any(term in search_text for term in (" director ", " head of ", " head ")):
+        level, label = 5.0, "director"
+    elif " principal " in search_text:
+        level, label = 4.5, "principal"
+    elif " staff " in search_text:
+        level, label = 4.2, "staff"
+    elif " manager " in search_text or " engineering manager " in search_text:
+        level, label = 4.0, "manager"
+    elif " lead " in search_text:
+        level, label = 3.8, "lead"
+    elif any(term in search_text for term in (" senior ", " sr ", " founding ")):
+        level, label = 3.2, "senior"
+    elif any(term in search_text for term in (" junior ", " jr ", " associate ", " intern ", " trainee ")):
+        level, label = 1.2, "junior"
+    elif min_years >= 8.0:
+        level, label = 4.0, "lead"
+    elif min_years >= 5.0:
+        level, label = 3.2, "senior"
+    elif min_years >= 3.0:
+        level, label = 2.5, "mid"
+    else:
+        level, label = 2.0, "early"
+
+    management_terms = (" manager ", " director ", " head ", " vp ", " vice president ", " cto ", " chief ")
+    hands_on_terms = (
+        " hands-on ",
+        " hands on ",
+        " build ",
+        " building ",
+        " code ",
+        " coding ",
+        " engineer ",
+        " developer ",
+        " individual contributor ",
+        " ic ",
+    )
+    if any(term in search_text for term in management_terms) and not any(term in search_text for term in hands_on_terms):
+        role_mode = "management"
+    elif any(term in search_text for term in management_terms) and any(term in search_text for term in hands_on_terms):
+        role_mode = "hybrid"
+    else:
+        role_mode = "ic"
+
+    if max_years < min_years:
+        max_years = min_years
+    return level, label, role_mode
+
+
 def _mentions_any(text: str, terms: tuple[str, ...]) -> bool:
     padded = f" {text.lower()} "
     return any(term in padded for term in terms)
@@ -577,6 +639,16 @@ def build_job_contract(job_description_text: str | None = None) -> JobContract:
     if is_default_contract:
         min_years = DEFAULT_JD_CONTRACT.min_years
         max_years = DEFAULT_JD_CONTRACT.max_years
+    target_seniority_level, target_seniority_label, target_role_mode = _infer_target_seniority(
+        raw_text,
+        positive_title_terms,
+        min_years,
+        max_years,
+    )
+    if is_default_contract:
+        target_seniority_level = DEFAULT_JD_CONTRACT.target_seniority_level
+        target_seniority_label = DEFAULT_JD_CONTRACT.target_seniority_label
+        target_role_mode = DEFAULT_JD_CONTRACT.target_role_mode
 
     negative_title_terms = tuple(
         term
@@ -602,6 +674,9 @@ def build_job_contract(job_description_text: str | None = None) -> JobContract:
         exclusion_keywords=exclusion_keywords,
         min_years=min_years,
         max_years=max_years,
+        target_seniority_level=target_seniority_level,
+        target_seniority_label=target_seniority_label,
+        target_role_mode=target_role_mode,
         positive_title_terms=positive_title_terms,
         positive_title_hints=_positive_title_hints(
             positive_title_terms,

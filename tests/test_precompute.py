@@ -21,7 +21,14 @@ def test_run_precompute_builds_feature_artifacts(tmp_path, sample_candidates):
     assert hash_path.exists()
     assert verify_dataset_hash(candidates_path, hash_path)
     assert features.shape[0] == 5
-    assert {"candidate_id", "title_score", "tfidf_score", "availability_multiplier"} <= set(features.columns)
+    assert {
+        "candidate_id",
+        "title_score",
+        "tfidf_score",
+        "availability_multiplier",
+        "work_maturity_score",
+        "seniority_alignment_score",
+    } <= set(features.columns)
 
 
 def test_run_precompute_uses_supplied_job_description_for_title_contract(tmp_path, sample_candidates):
